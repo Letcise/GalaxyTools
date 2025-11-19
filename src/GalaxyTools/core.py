@@ -1,4 +1,6 @@
-from .Logger.logger import create_logger
+from .Logger.logger import setup_logger
+import logging
 
-logger = create_logger(__name__)  # 创建一个模块级别的 logger
-logger.info("GalaxyTools core module loaded.")
+def get_logger(name=None) -> logging.Logger:
+    setup_logger()  # 自动 lazy 初始化
+    return logging.getLogger(name or __name__)
