@@ -10,4 +10,3 @@ logger默认具备三个handler：console_handler info_file_handler error_file_h
 ```python
 from GalaxyTools.core import logger
 logger.info("GalaxyTools package initialized.")
-# → hello world!
