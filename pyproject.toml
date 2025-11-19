@@ -17,7 +17,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 requires-python = ">=3.10"
-dependencies = []  # 无外部依赖
+dependencies = [
+    "python-dotenv"
+]
 
 [project.urls]
 Homepage = "https://github.com/Letcise/GalaxyTools"
