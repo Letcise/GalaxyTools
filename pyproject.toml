@@ -19,7 +19,8 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "python-dotenv",
-    "openai"
+    "openai",
+    "requests"
 ]
 
 [project.urls]

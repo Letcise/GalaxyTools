@@ -47,3 +47,76 @@ def random_string(length: int = 8) -> str:
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+def save_text(file_position : str, content : str) -> bool:
+    """
+    保存文本文件.
+
+    参数:
+        file_position (str): 文本保存的位置。
+        content (str): 文本内容。
+    返回:
+        str: 生成的随机字符串。
+    """
+    try:
+        from pathlib import Path
+        path = Path(file_position)
+        import os
+        env = os.getenv('env', 'development')
+        if env != 'production':
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"文件将保存在{path.parent}中")
+        path.parent.mkdir(exist_ok=True)
+        with open(path, 'w') as f:
+            f.write(content)
+        return True
+    except:
+        return False
+
+from typing import Callable, List, Any
+import os
+from functools import partial
+def map_folder(func: Callable, folder_path: str, concurrent: int = 1, *args, **kwargs) -> List[Any]:
+    """
+    对 folder_path 中的每个文件（或子项）调用 func(item_path, *args, **kwargs)
+
+    Args:
+        func (Callable): 待调用函数
+        folder_path (str): 文件夹路径
+        concurrent (int, optional): 并发数。默认为 1（串行）。
+
+    Returns:
+        list: 每个文件处理结果形成的列表
+    """
+    items = os.listdir(folder_path)
+    item_paths = [os.path.join(folder_path, item) for item in items]
+
+    if concurrent == 1:
+        ret = []
+        for item_path in item_paths:
+            ret.append(func(item_path, *args, **kwargs))
+        return ret
+    else:
+        item_paths = [os.path.join(folder_path, item) for item in os.listdir(folder_path)]
+        args_list = [args] * len(item_paths)  # 因为 item_path 已作为第一个参数
+        kwargs_list = [dict(kwargs)] * len(item_paths)
+
+        from .concurrent import run_concurrently
+        return run_concurrently(
+            func,
+            args_list,
+            kwargs_list
+        )
+
+def read_text(file:str, encoding='utf-8') -> str:
+    """读取文本文件
+
+    Args:
+        file (str): 文件路径
+        use_logger (str): 文件编码方式. Defaults to utf-8.
+
+    Returns:
+        str: 文本内容
+    """
+    with open(file, encoding='utf-8') as f:
+        return f.read()
