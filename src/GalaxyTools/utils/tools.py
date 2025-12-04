@@ -75,8 +75,9 @@ def save_text(file_position : str, content : str) -> bool:
 
 from typing import Callable, List, Any
 import os
-from functools import partial
-def map_folder(func: Callable, folder_path: str, concurrent: int = 1, *args, **kwargs) -> List[Any]:
+def map_folder(func: Callable, folder_path: str, concurrent: int = 1, 
+               key: Callable = None, use_thread: bool = True, 
+               *args, **kwargs) -> List[Any]:
     """
     对 folder_path 中的每个文件（或子项）调用 func(item_path, *args, **kwargs)
 
@@ -84,28 +85,36 @@ def map_folder(func: Callable, folder_path: str, concurrent: int = 1, *args, **k
         func (Callable): 待调用函数
         folder_path (str): 文件夹路径
         concurrent (int, optional): 并发数。默认为 1（串行）。
+        key (Callable, optional): 排序函数。默认为 None（不排序）。
+        use_thread (bool, optional): 是否使用线程池。默认为 True（使用线程池）。
+        *args: 传递给 func 的其他位置参数
+        **kwargs: 传递给 func 的其他关键字参数
 
     Returns:
         list: 每个文件处理结果形成的列表
     """
     items = os.listdir(folder_path)
+    if key:
+        items.sort(key=key)
     item_paths = [os.path.join(folder_path, item) for item in items]
 
     if concurrent == 1:
+        return [func(item, *args, **kwargs) for item in item_paths]
         ret = []
         for item_path in item_paths:
             ret.append(func(item_path, *args, **kwargs))
         return ret
     else:
-        item_paths = [os.path.join(folder_path, item) for item in os.listdir(folder_path)]
-        args_list = [args] * len(item_paths)  # 因为 item_path 已作为第一个参数
+        args_list = [[item, *args] for item in item_paths]
         kwargs_list = [dict(kwargs)] * len(item_paths)
 
         from .concurrent import run_concurrently
         return run_concurrently(
             func,
             args_list,
-            kwargs_list
+            kwargs_list,
+            max_workers=concurrent,
+            use_threads=use_thread
         )
 
 def read_text(file:str, encoding='utf-8') -> str:

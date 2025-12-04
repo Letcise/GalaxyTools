@@ -1,4 +1,4 @@
-from typing import Callable, List, Any, Iterable
+from typing import Callable, List, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
@@ -25,9 +25,7 @@ def run_concurrently(
     """
 
     Executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
-
     results = [None] * len(args_list)
-
     with Executor(max_workers=max_workers) as executor:
         # 提交所有任务并保留 future 到原始索引的映射
         future_to_index = {
@@ -43,5 +41,4 @@ def run_concurrently(
             except Exception as exc:
                 # 可根据需要自定义异常处理，这里简单抛出或记录
                 raise RuntimeError(f"Task {index} generated an exception: {exc}") from exc
-
     return results
