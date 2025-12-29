@@ -13,7 +13,7 @@ class LevelFilter(logging.Filter):
     def filter(self, record):
         return record.levelno == self.level  # 严格等于该级别
 
-def add_console_handler(logger: logging.Logger, format: logging.Formatter = None) -> None:
+def get_console_handler(format: logging.Formatter = None) -> None:
     """
     为给定的 logger 添加一个控制台处理器。
 
@@ -29,9 +29,9 @@ def add_console_handler(logger: logging.Logger, format: logging.Formatter = None
             datefmt='%Y-%m-%d %H:%M:%S'
         )
     console_handler.setFormatter(format)
-    logger.addHandler(console_handler)
+    return console_handler
 
-def add_file_handler(logger: logging.Logger, log_dir: str = None, format: logging.Formatter = None) -> None:
+def get_file_handler(log_dir: str = None, format: logging.Formatter = None) -> None:
     """
     为给定的 logger 添加一个文件处理器。
 
@@ -45,7 +45,11 @@ def add_file_handler(logger: logging.Logger, log_dir: str = None, format: loggin
             fmt='%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S'
         )
-    def add_info_handler():
+    if not log_dir:
+        log_dir = './logs'
+    os.makedirs(log_dir, exist_ok=True)
+    
+    def get_info_handler():
         info_file_handler = TimedRotatingFileHandler(
             os.path.join(log_dir,'info.log'), 
             when='midnight',
@@ -57,9 +61,9 @@ def add_file_handler(logger: logging.Logger, log_dir: str = None, format: loggin
         info_file_handler.setLevel(logging.INFO)
         info_file_handler.addFilter(LevelFilter(logging.INFO))
         info_file_handler.setFormatter(format)
-        logger.addHandler(info_file_handler)
+        return info_file_handler
     
-    def add_error_handler():
+    def get_error_handler():
         error_file_handler = TimedRotatingFileHandler(
             os.path.join(log_dir,'error.log'), 
             when='midnight',
@@ -71,12 +75,11 @@ def add_file_handler(logger: logging.Logger, log_dir: str = None, format: loggin
         error_file_handler.setLevel(logging.ERROR)
         error_file_handler.addFilter(LevelFilter(logging.ERROR))
         error_file_handler.setFormatter(format)
-        logger.addHandler(error_file_handler)
+        return error_file_handler
     
-    add_info_handler()
-    add_error_handler()
+    return get_info_handler(), get_error_handler()
 
-def setup_logger(name: str,log_dir: str = None) -> None:
+def setup_logger(name: str, logger_level: int = 10, log_dir: str = None) -> None:
     """
     设置全局 logger 。
 
@@ -87,15 +90,23 @@ def setup_logger(name: str,log_dir: str = None) -> None:
     global _SETUP_DONE
     if _SETUP_DONE:
         return
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+    
     format = logging.Formatter(
-        fmt='%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s',
+        fmt='%(asctime)s,%(msecs)d %(levelname)-2s [%(filename)s:%(lineno)d] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    add_console_handler(logger, format)
-    if not log_dir:
-        log_dir = './logs'
-    os.makedirs(log_dir, exist_ok=True)
-    add_file_handler(logger, log_dir, format)
+    log_handlers: list[logging.Handler] = []
+    
+    log_handlers.append(get_console_handler(format))
+    info_handler, error_handler = get_file_handler(log_dir, format)
+    log_handlers.append(info_handler)
+    log_handlers.append(error_handler)
+
+    logging.basicConfig(
+        level=logger_level,
+        handlers=log_handlers,
+        force=True,
+    )
     _SETUP_DONE = True
