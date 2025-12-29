@@ -1,3 +1,4 @@
+from traceback import print_tb
 from GalaxyTools import setup_logger
 from GalaxyTools import initialize_environment, random_string, call_dify
 import os
@@ -12,20 +13,37 @@ logger.info(f"项目名{os.getenv('PROJECT_NAME')}")
 
 print(random_string(10))
 
-chunks = call_dify(
-    endpoint=os.getenv("DIFY_ENDPOINT") + '/chat-messages',
-    payload={
-        "inputs": {},
-        "query": "你好",
-        "response_mode": "streaming",
-        "conversation_id": "",
-        "user": "abc-123",
-        "files": []
-    },
-    headers={
-        'Content-Type':'application/json',
-        'Authorization': f'Bearer {os.getenv("DIFY_API_KEY")}'
-    }
+# chunks = call_dify(
+#     endpoint=os.getenv("DIFY_ENDPOINT") + '/chat-messages',
+#     payload={
+#         "inputs": {},
+#         "query": "你好",
+#         "response_mode": "streaming",
+#         "conversation_id": "",
+#         "user": "abc-123",
+#         "files": []
+#     },
+#     headers={
+#         'Content-Type':'application/json',
+#         'Authorization': f'Bearer {os.getenv("DIFY_API_KEY")}'
+#     }
+# )
+# for chunk in chunks:
+#     print(chunk)
+
+from GalaxyTools import map_folder
+def read_text(file, use_logger=False):
+    print(file)
+    if use_logger:
+        logger.info(file)
+    else:
+        print(file)
+    return file
+
+map_folder(
+    read_text,
+    './tests/logs',
+    use_logger=True,
+    concurrent=2,
+    use_thread=True
 )
-for chunk in chunks:
-    print(chunk)
