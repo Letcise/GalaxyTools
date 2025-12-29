@@ -1,8 +1,10 @@
-from GalaxyTools import get_logger
+from GalaxyTools import setup_logger
 from GalaxyTools import initialize_environment, random_string, call_dify
 import os
+import logging
+setup_logger(logger_level=logging.INFO)
 
-logger= get_logger(__name__)
+logger = logging.getLogger(__name__)
 logger.info("GalaxyTools库初始化.")
 
 initialize_environment()
