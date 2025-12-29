@@ -75,9 +75,9 @@ def save_text(file_position : str, content : str) -> bool:
 
 from typing import Callable, List, Any
 import os
-def map_folder(func: Callable, folder_path: str, concurrent: int = 1, 
+def map_folder(func: Callable, folder_path: str, *args, concurrent: int = 1, 
                key: Callable = None, use_thread: bool = True, 
-               *args, **kwargs) -> List[Any]:
+               **kwargs) -> List[Any]:
     """
     对 folder_path 中的每个文件（或子项）调用 func(item_path, *args, **kwargs)
 
@@ -100,22 +100,12 @@ def map_folder(func: Callable, folder_path: str, concurrent: int = 1,
 
     if concurrent == 1:
         return [func(item, *args, **kwargs) for item in item_paths]
-        ret = []
-        for item_path in item_paths:
-            ret.append(func(item_path, *args, **kwargs))
-        return ret
     else:
-        args_list = [[item, *args] for item in item_paths]
-        kwargs_list = [dict(kwargs)] * len(item_paths)
-
-        from .concurrent import run_concurrently
-        return run_concurrently(
-            func,
-            args_list,
-            kwargs_list,
-            max_workers=concurrent,
-            use_threads=use_thread
-        )
+        from .concurrent import ConcurrentMap
+        if use_thread:
+            return ConcurrentMap.thread_map(func, item_paths, *args, max_workers=concurrent, **kwargs)
+        else:
+            return ConcurrentMap.process_map(func, item_paths, *args, max_workers=concurrent, **kwargs)
 
 def read_text(file:str, encoding='utf-8') -> str:
     """读取文本文件
