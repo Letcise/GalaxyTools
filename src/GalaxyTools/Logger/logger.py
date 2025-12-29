@@ -79,7 +79,7 @@ def get_file_handler(log_dir: str = None, format: logging.Formatter = None) -> N
     
     return get_info_handler(), get_error_handler()
 
-def setup_logger(name: str, logger_level: int = 10, log_dir: str = None) -> None:
+def setup_logger(logger_level: logging = logging.DEBUG, log_dir: str = None) -> None:
     """
     设置全局 logger 。
 
